@@ -9,6 +9,55 @@ users already know.
 
 ![Home Screen](reference/home.png)
 
+## What's different in this fork
+
+This is a fork of
+[ambercaravalho/flip-launcher](https://github.com/ambercaravalho/flip-launcher),
+tuned for daily use on a TCL Flip 2. It adds four changes on top of the
+upstream launcher; everything else works as described in the rest of this
+README.
+
+### Rename apps
+
+Give any app a custom name in the App Drawer. The new name is used everywhere
+the launcher shows the app: the drawer (sorted by the new name), the Home
+shortcut rail, soft-key assignments and the Hide / Show Apps list.
+
+- **Rename:** open All Apps, highlight an app, press **Options** (right soft
+  key) and choose **Rename**. Type the name on the keypad, then press Down and
+  choose **Save** (or press the keyboard's Done key). Saving an empty name
+  restores the app's own label.
+- **Reset:** **Options → Reset Name** appears once an app has a custom name.
+- Custom names are removed automatically when the app is uninstalled.
+
+### Uncluttered Home screen
+
+- No AM/PM line above the clock (the status bar still shows it; turn on
+  24-hour time in system settings for an unambiguous clock).
+- No dashed **+** tile on the shortcut rail. Add shortcuts from the App
+  Drawer (**Options → Add to Home Shortcuts**) or **Settings → Home Screen &
+  Keys → Customize Home Shortcuts**.
+- No apps icon above the center soft key. The center key still opens All Apps,
+  and a long-press still opens Settings.
+
+### D-pad shortcuts on Home
+
+Each D-pad direction (Up, Down, Left, Right) can open an app, or a specific
+screen inside an app, when pressed on Home. This replaces the stock home
+screen's "Key shortcuts", which stop working once another launcher is the
+default Home app.
+
+- Set them in **Settings → Home Screen & Keys → D-pad Shortcuts**.
+- **Choose App** opens the app picker; its **Activities** soft key lets you
+  target a specific screen inside an app.
+- Assigning Left replaces Left's default job of jumping to the shortcut rail.
+
+### Recent apps (TCL Flip 2)
+
+On phones with TCL's recents screen, each D-pad shortcut also offers
+**Recent Apps**, which opens the phone's own Recent apps list. Assigning it to
+**Down** matches the stock TCL setup.
+
 ## Features
 
 ### Home screen
