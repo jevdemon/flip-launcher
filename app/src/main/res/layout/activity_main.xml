@@ -236,18 +236,21 @@
             tools:ignore="RtlSymmetry"
             xmlns:tools="http://schemas.android.com/tools" />
 
+        <!-- Invisible but still focused and clickable: it receives the center
+             key (open app list) and its long-press (Settings). No icon or
+             highlight is drawn, to keep Home uncluttered. -->
         <ImageView
             android:id="@+id/softkey_center"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_rail_focus"
+            android:background="@null"
             android:clickable="true"
             android:contentDescription="@string/content_apps"
+            android:defaultFocusHighlightEnabled="false"
             android:focusable="true"
             android:paddingStart="18dp"
             android:paddingEnd="18dp"
-            android:scaleType="center"
-            android:src="@drawable/ic_apps_dots" />
+            android:scaleType="center" />
 
         <TextView
             android:id="@+id/softkey_right"

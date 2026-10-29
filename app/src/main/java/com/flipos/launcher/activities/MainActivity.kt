@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -30,7 +29,6 @@ import com.flipos.launcher.data.NotificationCounts
 import com.flipos.launcher.ui.HomeRailAdapter
 import com.flipos.launcher.ui.RailItem
 import com.flipos.launcher.util.BackgroundLoader
-import com.flipos.launcher.util.accentColorAlpha
 import com.flipos.launcher.util.launchAppByKey
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -65,7 +63,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var notifOtherGroup: View
     private lateinit var notifOtherCount: TextView
 
-    private val ampmFmt = SimpleDateFormat("a", Locale.getDefault())
     private val time12 = SimpleDateFormat("h:mm", Locale.getDefault())
     private val time24 = SimpleDateFormat("HH:mm", Locale.getDefault())
     private val weekdayFmt = SimpleDateFormat("EEEE", Locale.getDefault())
@@ -165,8 +162,6 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.softkey_left).setOnClickListener { openLeftKeyApp() }
         findViewById<TextView>(R.id.softkey_right).setOnClickListener { openRightKeyApp() }
         appMenuButton = findViewById<ImageView>(R.id.softkey_center).apply {
-            // bg_rail_focus is white so it can be tinted to the user's accent.
-            backgroundTintList = ColorStateList.valueOf(accentColorAlpha(0x4D))
             setOnClickListener { openAppDrawer() }
             setOnLongClickListener { openOptions(); true }
             // Left jumps straight to the first pinned shortcut. The soft keys
@@ -180,7 +175,9 @@ class MainActivity : AppCompatActivity() {
                 if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
                 when (keyCode) {
                     KeyEvent.KEYCODE_DPAD_LEFT -> {
-                        rail.layoutManager?.findViewByPosition(0)?.requestFocus() ?: rail.requestFocus()
+                        // With no pinned shortcuts the rail is empty (no "+" tile),
+                        // so stay put rather than parking focus on an empty list.
+                        rail.layoutManager?.findViewByPosition(0)?.requestFocus()
                         true
                     }
                     KeyEvent.KEYCODE_DPAD_RIGHT -> true
@@ -260,13 +257,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateClock() {
         val now = Date()
-        if (android.text.format.DateFormat.is24HourFormat(this)) {
-            ampm.visibility = TextView.GONE
-            clock.text = time24.format(now)
+        // AM/PM is never shown above the clock.
+        ampm.visibility = TextView.GONE
+        clock.text = if (android.text.format.DateFormat.is24HourFormat(this)) {
+            time24.format(now)
         } else {
-            ampm.visibility = TextView.VISIBLE
-            ampm.text = ampmFmt.format(now)
-            clock.text = time12.format(now)
+            time12.format(now)
         }
         weekday.text = weekdayFmt.format(now)
         dateLine.text = dateFmt.format(now)
@@ -283,9 +279,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (resolved.size != keys.size) prefs.setShortcuts(resolved.map { it.first })
 
-                val entries = resolved.mapTo(ArrayList()) { RailItem(it.second) }
-                if (resolved.size < LauncherPrefs.MAX_SHORTCUTS) entries.add(RailItem(null))
-                entries
+                // No trailing "+" tile: shortcuts are added from the app list
+                // (Options > Add to Home Shortcuts) or Settings > Home Screen & Keys.
+                resolved.mapTo(ArrayList()) { RailItem(it.second) }
             },
             consume = { entries -> if (!isDestroyed) adapter.submit(entries) },
         )
