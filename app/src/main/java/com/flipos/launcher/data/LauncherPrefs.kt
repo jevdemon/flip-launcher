@@ -93,6 +93,23 @@ class LauncherPrefs(context: Context) {
         prefs.edit().putInt(KEY_ICON_SIZE_PERCENT, clamped).apply()
     }
 
+    // ---------------------------------------------------- Home D-pad keys
+
+    /** The four D-pad directions that can open an app from Home. */
+    enum class DpadKey(val prefKey: String) {
+        UP("dpad_app_up"),
+        DOWN("dpad_app_down"),
+        LEFT("dpad_app_left"),
+        RIGHT("dpad_app_right"),
+    }
+
+    /** App or activity key opened by pressing [dir] on Home, or null if unassigned. */
+    fun getDpadKeyApp(dir: DpadKey): String? = prefs.getString(dir.prefKey, null)
+
+    fun setDpadKeyApp(dir: DpadKey, key: String?) {
+        prefs.edit().putString(dir.prefKey, key).apply()
+    }
+
     // ----------------------------------------------------- Home right key
 
     /** App key launched by the right soft key on Home, or null for Contacts. */

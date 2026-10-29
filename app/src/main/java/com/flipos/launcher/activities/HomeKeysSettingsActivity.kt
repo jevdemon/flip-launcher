@@ -56,11 +56,35 @@ class HomeKeysSettingsActivity : BaseListActivity() {
         }
     }
 
+    /** Direction whose app is being picked; survives the picker round-trip. */
+    private var pendingDpad: LauncherPrefs.DpadKey? = null
+
+    private val pickDpadApp = registerForActivityResult(StartActivityForResult()) { result ->
+        val dir = pendingDpad ?: return@registerForActivityResult
+        pendingDpad = null
+        if (result.resultCode == RESULT_OK) {
+            result.data?.getStringExtra(AppPickerActivity.EXTRA_APP_KEY)?.let { key ->
+                prefs.setDpadKeyApp(dir, key)
+                val target = AppRepository.resolveComponent(this, key)?.label ?: key
+                Toast.makeText(this, getString(R.string.dpad_set, getString(dpadTitle(dir)), target), Toast.LENGTH_SHORT).show()
+                refreshRows()
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        pendingDpad?.let { outState.putString(STATE_PENDING_DPAD, it.name) }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = LauncherPrefs(this)
         titleView.text = getString(R.string.cat_home_keys)
+        pendingDpad = savedInstanceState?.getString(STATE_PENDING_DPAD)
+            ?.let { name -> LauncherPrefs.DpadKey.entries.find { it.name == name } }
 
+        LauncherPrefs.DpadKey.entries.forEach { dir -> actions[dpadRowId(dir)] = { chooseDpadKey(dir) } }
         actions[ID_LEFT_KEY] = { chooseLeftKey() }
         actions[ID_RIGHT_KEY] = { chooseRightKey() }
         actions[ID_BACK_LONGPRESS] = { configureBackLongPress() }
@@ -99,6 +123,13 @@ class HomeKeysSettingsActivity : BaseListActivity() {
                 Row.section(getString(R.string.sec_soft_keys)),
                 Row(id = ID_LEFT_KEY, title = getString(R.string.settings_left_key), trailing = leftLabel, chevron = true),
                 Row(id = ID_RIGHT_KEY, title = getString(R.string.settings_right_key), trailing = rightLabel, chevron = true),
+                Row.section(getString(R.string.sec_dpad_keys)),
+            ) + LauncherPrefs.DpadKey.entries.map { dir ->
+                val label = prefs.getDpadKeyApp(dir)?.let { key ->
+                    AppRepository.resolveComponent(this, key)?.label ?: key.substringAfterLast('.')
+                } ?: getString(R.string.dpad_not_set)
+                Row(id = dpadRowId(dir), title = getString(dpadTitle(dir)), trailing = label, chevron = true)
+            } + listOf(
                 Row.section(getString(R.string.sec_buttons)),
                 Row(id = ID_BACK_LONGPRESS, title = getString(R.string.opt_back_longpress), trailing = backLabel, chevron = true),
                 Row.section(getString(R.string.sec_shortcuts)),
@@ -109,6 +140,40 @@ class HomeKeysSettingsActivity : BaseListActivity() {
 
     private fun dispatch(position: Int) {
         adapter.rowAt(position)?.id?.let { actions[it]?.invoke() }
+    }
+
+    private fun dpadRowId(dir: LauncherPrefs.DpadKey) = "dpad_${dir.name}"
+
+    private fun dpadTitle(dir: LauncherPrefs.DpadKey) = when (dir) {
+        LauncherPrefs.DpadKey.UP -> R.string.dpad_up
+        LauncherPrefs.DpadKey.DOWN -> R.string.dpad_down
+        LauncherPrefs.DpadKey.LEFT -> R.string.dpad_left
+        LauncherPrefs.DpadKey.RIGHT -> R.string.dpad_right
+    }
+
+    private fun launchDpadPicker(dir: LauncherPrefs.DpadKey) {
+        pendingDpad = dir
+        pickDpadApp.launch(Intent(this, AppPickerActivity::class.java))
+    }
+
+    private fun chooseDpadKey(dir: LauncherPrefs.DpadKey) {
+        if (prefs.getDpadKeyApp(dir) == null) {
+            launchDpadPicker(dir)
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle(dpadTitle(dir))
+            .setItems(arrayOf(getString(R.string.back_longpress_choose), getString(R.string.dpad_clear))) { _, which ->
+                when (which) {
+                    0 -> launchDpadPicker(dir)
+                    1 -> {
+                        prefs.setDpadKeyApp(dir, null)
+                        Toast.makeText(this, getString(R.string.dpad_cleared, getString(dpadTitle(dir))), Toast.LENGTH_SHORT).show()
+                        refreshRows()
+                    }
+                }
+            }
+            .show()
     }
 
     private fun chooseRightKey() {
@@ -181,5 +246,6 @@ class HomeKeysSettingsActivity : BaseListActivity() {
         private const val ID_RIGHT_KEY = "right_key"
         private const val ID_BACK_LONGPRESS = "back_longpress"
         private const val ID_SHORTCUTS = "shortcuts"
+        private const val STATE_PENDING_DPAD = "pending_dpad"
     }
 }

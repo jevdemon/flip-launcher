@@ -171,8 +171,24 @@ class MainActivity : AppCompatActivity() {
             // whichever item geometric search happens to pick, not the top one.
             // Right has no focusable target and is swallowed so it's a no-op
             // instead of also leaking into the rail.
+            //
+            // A D-pad direction with an app assigned in Settings > Home Screen &
+            // Keys opens that app instead (replacing the stock home's "Key
+            // shortcuts", which only work while the stock launcher is Home).
             setOnKeyListener { _, keyCode, event ->
                 if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
+                val dir = when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_UP -> LauncherPrefs.DpadKey.UP
+                    KeyEvent.KEYCODE_DPAD_DOWN -> LauncherPrefs.DpadKey.DOWN
+                    KeyEvent.KEYCODE_DPAD_LEFT -> LauncherPrefs.DpadKey.LEFT
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> LauncherPrefs.DpadKey.RIGHT
+                    else -> null
+                }
+                val assigned = dir?.let { prefs.getDpadKeyApp(it) }
+                if (assigned != null) {
+                    if (event.repeatCount == 0) launchAppByKey(assigned)
+                    return@setOnKeyListener true
+                }
                 when (keyCode) {
                     KeyEvent.KEYCODE_DPAD_LEFT -> {
                         // With no pinned shortcuts the rail is empty (no "+" tile),
