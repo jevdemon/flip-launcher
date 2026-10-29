@@ -6,8 +6,13 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputType
 import android.view.KeyEvent
 import android.view.View
+import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -363,8 +368,12 @@ class AppDrawerActivity : AppCompatActivity() {
             ContextItem(getString(R.string.ctx_open)) { launchAppByKey(app.key) },
             ContextItem(getString(R.string.ctx_add_home)) { addToHome(app) },
             ContextItem(getString(R.string.ctx_hide)) { hideApp(app) },
-            ContextItem(getString(R.string.ctx_change_icon)) { changeIcon(app) },
+            ContextItem(getString(R.string.ctx_rename)) { renameApp(app) },
         )
+        if (prefs.getLabelOverride(app.key) != null) {
+            items.add(ContextItem(getString(R.string.ctx_reset_name)) { resetName(app) })
+        }
+        items.add(ContextItem(getString(R.string.ctx_change_icon)) { changeIcon(app) })
         if (prefs.getIconOverride(app.key) != null) {
             items.add(ContextItem(getString(R.string.ctx_reset_icon)) { resetIcon(app) })
         }
@@ -384,6 +393,62 @@ class AppDrawerActivity : AppCompatActivity() {
             .setCustomTitle(titleView)
             .setItems(items.map { it.label }.toTypedArray()) { _, which -> items[which].action() }
             .show()
+    }
+
+    /**
+     * Prompts for a new display name. Typed on the keypad; Down moves focus from
+     * the field to the Save/Cancel buttons, and the keyboard's Done key saves too.
+     * Saving an empty name restores the app's own label.
+     */
+    private fun renameApp(app: AppInfo) {
+        if (isFinishing || isDestroyed) return
+        val pad = (20 * resources.displayMetrics.density).toInt()
+        val input = EditText(this).apply {
+            setText(app.label)
+            setSelection(text.length)
+            isSingleLine = true
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            imeOptions = EditorInfo.IME_ACTION_DONE
+        }
+        val container = FrameLayout(this).apply {
+            setPadding(pad, pad / 2, pad, 0)
+            addView(input)
+        }
+        val save = {
+            val name = input.text.toString()
+            prefs.setLabelOverride(app.key, name)
+            val shown = prefs.getLabelOverride(app.key)
+            Toast.makeText(
+                this,
+                if (shown != null) getString(R.string.toast_renamed, shown) else getString(R.string.toast_name_reset),
+                Toast.LENGTH_SHORT,
+            ).show()
+            refresh()
+        }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.rename_title, app.label))
+            .setView(container)
+            .setPositiveButton(R.string.rename_save) { _, _ -> save() }
+            .setNegativeButton(R.string.rename_cancel, null)
+            .create()
+        input.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                save()
+                dialog.dismiss()
+                true
+            } else {
+                false
+            }
+        }
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+        dialog.show()
+        input.requestFocus()
+    }
+
+    private fun resetName(app: AppInfo) {
+        prefs.clearLabelOverride(app.key)
+        Toast.makeText(this, R.string.toast_name_reset, Toast.LENGTH_SHORT).show()
+        refresh()
     }
 
     private fun changeIcon(app: AppInfo) {

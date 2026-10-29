@@ -104,7 +104,10 @@ class MainActivity : AppCompatActivity() {
             if (intent?.action == Intent.ACTION_PACKAGE_REMOVED &&
                 intent.getBooleanExtra(Intent.EXTRA_REPLACING, false).not()
             ) {
-                intent.data?.schemeSpecificPart?.let { prefs.pruneIconOverridesForPackage(it) }
+                intent.data?.schemeSpecificPart?.let {
+                    prefs.pruneIconOverridesForPackage(it)
+                    prefs.pruneLabelOverridesForPackage(it)
+                }
             }
             AppRepository.invalidateIconCaches()
             refreshShortcuts()

@@ -56,7 +56,7 @@ object AppRepository {
                 if (ai.packageName == self && ai.name != SETTINGS_ACTIVITY) return@mapNotNull null
                 val key = ComponentName(ai.packageName, ai.name).flattenToString()
                 AppInfo(
-                    label = ri.loadLabel(pm).toString(),
+                    label = prefs.getLabelOverride(key) ?: ri.loadLabel(pm).toString(),
                     packageName = ai.packageName,
                     activityName = ai.name,
                     icon = resolveIcon(context, prefs, key, ri.loadIcon(pm)),
@@ -113,7 +113,7 @@ object AppRepository {
             @Suppress("DEPRECATION")
             val ai = pm.getActivityInfo(component, 0)
             AppInfo(
-                label = ai.loadLabel(pm).toString(),
+                label = prefs.getLabelOverride(key) ?: ai.loadLabel(pm).toString(),
                 packageName = component.packageName,
                 activityName = component.className,
                 icon = resolveIcon(context, prefs, key, ai.loadIcon(pm)),

@@ -33,6 +33,13 @@
     <string name="ctx_disable_wrap">Don\'t Wrap Icon</string>
     <string name="ctx_enable_wrap">Wrap Icon</string>
     <string name="ctx_uninstall">Uninstall</string>
+    <string name="ctx_rename">Rename</string>
+    <string name="ctx_reset_name">Reset Name</string>
+    <string name="rename_title">Rename %1$s</string>
+    <string name="rename_save">Save</string>
+    <string name="rename_cancel">Cancel</string>
+    <string name="toast_renamed">Renamed to %1$s</string>
+    <string name="toast_name_reset">Name reset</string>
 
     <!-- Screen titles -->
     <string name="title_all_apps">All Apps</string>

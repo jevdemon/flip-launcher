@@ -179,6 +179,36 @@ class LauncherPrefs(context: Context) {
 
     private fun iconOverrideKey(appKey: String) = "$KEY_ICON_OVERRIDE_PREFIX$appKey"
 
+    // --------------------------------------------------------- Label overrides
+
+    /** User-chosen display name for [appKey], or null to use the app's own label. */
+    fun getLabelOverride(appKey: String): String? =
+        prefs.getString(labelOverrideKey(appKey), null)?.takeIf { it.isNotBlank() }
+
+    /** Sets a custom display name; a blank [label] clears the override instead. */
+    fun setLabelOverride(appKey: String, label: String) {
+        val trimmed = label.trim()
+        if (trimmed.isEmpty()) {
+            clearLabelOverride(appKey)
+        } else {
+            prefs.edit().putString(labelOverrideKey(appKey), trimmed).apply()
+        }
+    }
+
+    fun clearLabelOverride(appKey: String) {
+        prefs.edit().remove(labelOverrideKey(appKey)).apply()
+    }
+
+    /** Removes `label_override_*` entries for [packageName] once it's uninstalled. */
+    fun pruneLabelOverridesForPackage(packageName: String) {
+        val prefix = "$KEY_LABEL_OVERRIDE_PREFIX$packageName/"
+        val stale = prefs.all.keys.filter { it.startsWith(prefix) }
+        if (stale.isEmpty()) return
+        prefs.edit().apply { stale.forEach { remove(it) } }.apply()
+    }
+
+    private fun labelOverrideKey(appKey: String) = "$KEY_LABEL_OVERRIDE_PREFIX$appKey"
+
     // -------------------------------------------------------- Accent color
 
     /** The user's chosen accent color, or [AccentColor.DEFAULT] (the original cyan) if unset. */
@@ -284,6 +314,7 @@ class LauncherPrefs(context: Context) {
         private const val KEY_ACTIVE_ICON_PACK = "active_icon_pack"
         private const val KEY_DRAWER_LIST_VIEW = "drawer_list_view"
         private const val KEY_ICON_OVERRIDE_PREFIX = "icon_override_"
+        private const val KEY_LABEL_OVERRIDE_PREFIX = "label_override_"
         private const val KEY_ACCENT_COLOR = "accent_color"
         private const val ICON_OVERRIDE_SEPARATOR = "::"
         private const val KEY_ICON_SHAPE = "icon_shape"
