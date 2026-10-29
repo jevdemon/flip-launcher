@@ -307,6 +307,9 @@ class LauncherPrefs(context: Context) {
     }
 
     companion object {
+        /** TCL Flip 2's Recent apps screen (part of System UI, so not in the app list). */
+        const val TCL_RECENTS_KEY = "com.android.systemui/com.tcl.recents.RecentsListActivity"
+
         /** Maximum number of home shortcuts (mapped to keys 1..9). */
         const val MAX_SHORTCUTS = 9
 

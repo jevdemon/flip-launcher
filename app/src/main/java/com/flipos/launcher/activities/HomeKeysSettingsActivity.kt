@@ -126,7 +126,11 @@ class HomeKeysSettingsActivity : BaseListActivity() {
                 Row.section(getString(R.string.sec_dpad_keys)),
             ) + LauncherPrefs.DpadKey.entries.map { dir ->
                 val label = prefs.getDpadKeyApp(dir)?.let { key ->
-                    AppRepository.resolveComponent(this, key)?.label ?: key.substringAfterLast('.')
+                    if (key == LauncherPrefs.TCL_RECENTS_KEY) {
+                        getString(R.string.dpad_recent_apps)
+                    } else {
+                        AppRepository.resolveComponent(this, key)?.label ?: key.substringAfterLast('.')
+                    }
                 } ?: getString(R.string.dpad_not_set)
                 Row(id = dpadRowId(dir), title = getString(dpadTitle(dir)), trailing = label, chevron = true)
             } + listOf(
@@ -157,22 +161,31 @@ class HomeKeysSettingsActivity : BaseListActivity() {
     }
 
     private fun chooseDpadKey(dir: LauncherPrefs.DpadKey) {
-        if (prefs.getDpadKeyApp(dir) == null) {
-            launchDpadPicker(dir)
-            return
+        val options = mutableListOf<Pair<String, () -> Unit>>()
+        options += getString(R.string.back_longpress_choose) to { launchDpadPicker(dir) }
+        // TCL's recents screen lives in System UI, which has no app-list entry,
+        // so the picker can't reach it; offer it directly when this phone has it.
+        if (AppRepository.resolveComponent(this, LauncherPrefs.TCL_RECENTS_KEY) != null) {
+            options += getString(R.string.dpad_recent_apps) to {
+                prefs.setDpadKeyApp(dir, LauncherPrefs.TCL_RECENTS_KEY)
+                Toast.makeText(
+                    this,
+                    getString(R.string.dpad_set, getString(dpadTitle(dir)), getString(R.string.dpad_recent_apps)),
+                    Toast.LENGTH_SHORT,
+                ).show()
+                refreshRows()
+            }
+        }
+        if (prefs.getDpadKeyApp(dir) != null) {
+            options += getString(R.string.dpad_clear) to {
+                prefs.setDpadKeyApp(dir, null)
+                Toast.makeText(this, getString(R.string.dpad_cleared, getString(dpadTitle(dir))), Toast.LENGTH_SHORT).show()
+                refreshRows()
+            }
         }
         AlertDialog.Builder(this)
             .setTitle(dpadTitle(dir))
-            .setItems(arrayOf(getString(R.string.back_longpress_choose), getString(R.string.dpad_clear))) { _, which ->
-                when (which) {
-                    0 -> launchDpadPicker(dir)
-                    1 -> {
-                        prefs.setDpadKeyApp(dir, null)
-                        Toast.makeText(this, getString(R.string.dpad_cleared, getString(dpadTitle(dir))), Toast.LENGTH_SHORT).show()
-                        refreshRows()
-                    }
-                }
-            }
+            .setItems(options.map { it.first }.toTypedArray()) { _, which -> options[which].second() }
             .show()
     }
 

@@ -126,6 +126,7 @@
     <string name="dpad_right">Right Key</string>
     <string name="dpad_not_set">Not set</string>
     <string name="dpad_clear">Clear</string>
+    <string name="dpad_recent_apps">Recent Apps</string>
     <string name="dpad_set">%1$s will open %2$s</string>
     <string name="dpad_cleared">%1$s cleared</string>
     <string name="settings_icon_size_set">Icon size set to %1$s</string>
