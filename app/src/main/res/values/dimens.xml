@@ -22,7 +22,7 @@
     <!-- Type scale (sp). Tuned for readability on ~240x320 QVGA screens. -->
     <dimen name="text_title">25sp</dimen>
     <dimen name="screen_title">25sp</dimen>
-    <dimen name="text_row_title">16sp</dimen>
+    <dimen name="text_row_title">19sp</dimen>
     <dimen name="text_row_subtitle">12sp</dimen>
     <dimen name="text_row_trailing">13sp</dimen>
     <dimen name="text_section">12sp</dimen>
